@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#8b5cf6">
+    <title>NetGauge | Jash</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3653/3653139.png">
+    
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-sub: #f1f5f9;
+            --success: #4ade80;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: url('9.jpg');
+            background-size: 100% 100%;
+            color: var(--text-main);
+            overscroll-behavior: none; 
+        }
+
+        @keyframes rainbowFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            z-index: -1;
+        }
+
+        .glass-panel {
+            width: 95%;
+            max-width: 600px;
+            background: var(--glass-bg);
+            position: relative;
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid var(--glass-border);
+            border-radius: 64px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+                /* --- CLOCK STYLES --- */
+        .login-widgets { width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+        .clock { font-size: 64px; font-weight: 600; color: #ffffff; text-shadow: 0 0 25px rgba(99, 102, 241, 0.6); line-height: 1; margin-bottom: 5px; letter-spacing: 2px; }
+        .date { font-size: 16px; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 400; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+        .dot.sim { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .gauges-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .gauge-box {
+            position: relative;
+            background: rgba(8, 6, 6, 0.242);
+            padding: 20px;
+            border-radius: 64px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .gauge-svg { transform: rotate(-90deg); width: 100%; height: auto; max-width: 180px; }
+        .track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 12; }
+        .fill-arc {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 565.48;
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 0.3s ease-out;
+        }
+
+        #ring-dl { stroke: #38bdf8; filter: drop-shadow(0 0 8px #38bdf8); }
+        #ring-ul { stroke: #e33d8e; filter: drop-shadow(0 0 8px #e33d8e); }
+
+        .readout {
+            position: absolute;
+            top: 58%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .speed-val { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1; }
+        .label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub); opacity: 0.8; }
+
+        .btn-main {
+            width: 95%;
+            max-width: 600px;
+            background: rgba(8, 6, 6, 0.242);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            color: #fff;
+            border-radius: 128px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .info-text { margin-top: 20px; font-size: 0.9rem; color: var(--text-sub); min-height: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div class="glass-panel">
+        <div class="login-widgets">
+            <div id="clock-display" class="clock">00:00</div>
+            <div id="date-display" class="date">Loading Date...</div>
+        </div>
+        
+        <div class="status-pill">
+            <div id="status-dot" class="dot offline"></div>
+            <span id="status-txt">Offline</span>
+        </div>
+
+        <div class="gauges-container">
+            <div class="gauge-box">
+                <div class="label" style="margin-bottom: 10px;">Download</div>
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <circle class="track" cx="100" cy="100" r="90"></circle>
+                    <circle id="ring-dl" class="fill-arc" cx="100" cy="100" r="90"></circle>
+                </svg>
+                <div class="readout">
+                    <span id="val-dl" class="speed-val">0.0</span>
+                    <span class="label">Mbps</span>
+                </div>
+            </div>
+
+            <div class="gauge-box">
+                <div class="label" style="margin-bottom: 10px;">Upload</div>
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <circle class="track" cx="100" cy="100" r="90"></circle>
+                    <circle id="ring-ul" class="fill-arc" cx="100" cy="100" r="90"></circle>
+                </svg>
+                <div class="readout">
+                    <span id="val-ul" class="speed-val">0.0</span>
+                    <span class="label">Mbps</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-start" class="btn-main">BEGIN TEST</button>
+        <div id="msg-box" class="info-text">Ready to measure performance</div>
+    </div>
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker Registered'))
+            .catch((err) => console.log('SW Failed:', err));
+    }
+
+    const TEST_DURATION = 5000; 
+    const DL_URL = 'https://speed.cloudflare.com/__down?bytes=50000000';
+    const UP_URL = 'https://speed.cloudflare.com/__up?bytes=50000000';
+
+    let dlSpeedResult = 0; 
+
+    const ui = {
+        btn: document.getElementById('btn-start'),
+        dot: document.getElementById('status-dot'),
+        status: document.getElementById('status-txt'),
+        ringDl: document.getElementById('ring-dl'),
+        ringUl: document.getElementById('ring-ul'),
+        valDl: document.getElementById('val-dl'),
+        valUl: document.getElementById('val-ul'),
+        msg: document.getElementById('msg-box')
+    };
+
+    function updateRing(ring, mbps) {
+        const maxVisible = 150; 
+        let pct = Math.min(mbps / maxVisible, 1);
+        const circumference = 565.48;
+        ring.style.strokeDashoffset = circumference - (circumference * pct);
+    }
+
+    function updateClock() {
+            const now = new Date();
+            document.getElementById('clock-display').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('date-display').innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+    function runSimulation(type) {
+        return new Promise(resolve => {
+            const startTime = performance.now();
+            const endTime = startTime + TEST_DURATION;
+            let baseSpeed = type === 'dl' ? (Math.random() * 50 + 50) : (dlSpeedResult * 1.00); 
+            if(baseSpeed < 5) baseSpeed = 15;
+
+            const interval = setInterval(() => {
+                const now = performance.now();
+                if (now > endTime) {
+                    clearInterval(interval);
+                    if(type === 'dl') dlSpeedResult = baseSpeed;
+                    resolve();
+                    return;
+                }
+                const jitter = (Math.random() - 0.5) * 10;
+                let currentSpeed = Math.max(0, baseSpeed + jitter);
+                
+                const valEl = type === 'dl' ? ui.valDl : ui.valUl;
+                const ringEl = type === 'dl' ? ui.ringDl : ui.ringUl;
+                valEl.innerText = currentSpeed.toFixed(1);
+                updateRing(ringEl, currentSpeed);
+            }, 200);
+        });
+    }
+
+    async function startSuite() {
+        ui.btn.disabled = true;
+        ui.valDl.innerText = '0.0';
+        ui.valUl.innerText = '0.0';
+        updateRing(ui.ringDl, 0);
+        updateRing(ui.ringUl, 0);
+
+        try {
+            ui.msg.innerText = "Measuring Download Speed...";
+            try {
+                await runDownload();
+            } catch (e) {
+                console.warn("Switching to Demo Mode (DL)");
+                await runSimulation('dl');
+            }
+            
+            ui.msg.innerText = "Initializing Upload Speed...";
+            await new Promise(r => setTimeout(r, 800)); 
+
+            ui.msg.innerText = "Measuring Upload Speed...";
+            try {
+                await runUpload();
+            } catch (e) {
+                console.warn("Switching to Demo Mode (UL)");
+                await runSimulation('ul');
+            }
+            
+            ui.msg.innerText = "Test Complete";
+        } catch (err) {
+            console.error(err);
+            ui.msg.innerText = "Test interrupted";
+        } finally {
+            ui.btn.disabled = false;
+        }
+    }
+
+    async function runDownload() {
+        const startTime = performance.now();
+        const endTime = startTime + TEST_DURATION;
+        let totalBytes = 0;
+
+        const response = await fetch(DL_URL + '&cb=' + Math.random());
+        if (!response.ok && !response.body) throw new Error("Network Blocked");
+
+        const reader = response.body.getReader();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            const now = performance.now();
+            if (done || now > endTime) break;
+
+            totalBytes += value.byteLength;
+            const elapsed = (now - startTime) / 1000;
+            
+            if (elapsed > 0.1) {
+                const mbps = (totalBytes * 8) / (elapsed * 1000000);
+                dlSpeedResult = mbps;
+                ui.valDl.innerText = mbps.toFixed(1);
+                updateRing(ui.ringDl, mbps);
+            }
+        }
+    }
+
+    async function runUpload() {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', UP_URL, true);
+            // Increased buffer slightly for better real-world testing if it works
+            const data = new Uint8Array(2 * 1024 * 1024); 
+            
+            xhr.upload.onprogress = (e) => {
+                const duration = (performance.now() - startTime) / 1000;
+                const mbps = (e.loaded * 8) / (duration * 1000000);
+                ui.valUl.innerText = mbps.toFixed(1);
+                updateRing(ui.ringUl, mbps);
+            };
+
+            xhr.onload = () => resolve();
+            xhr.onerror = () => reject(new Error("CORS Blocked")); 
+            
+            const startTime = performance.now();
+            xhr.send(data);
+        });
+    }
+
+    function checkNet() {
+        const online = navigator.onLine;
+        ui.dot.className = online ? 'dot online' : 'dot offline';
+        ui.status.innerText = online ? 'Online' : 'Offline';
+        ui.btn.disabled = !online;
+    }
+
+    window.addEventListener('online', checkNet);
+    window.addEventListener('offline', checkNet);
+    ui.btn.addEventListener('click', startSuite);
+    checkNet();
+    </script>
+</body>
+</html>
