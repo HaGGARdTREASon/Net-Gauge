@@ -162,6 +162,43 @@
             margin: 0 auto 18px;
         }
 
+        .network-info {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 18px;
+            background: rgba(8, 6, 6, 0.242);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 32px;
+            padding: 14px 20px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .network-info .net-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .network-info .net-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            word-break: break-all;
+        }
+
+        .network-info .net-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            opacity: 0.7;
+        }
+
         .stat-box {
             background: rgba(8, 6, 6, 0.242);
             border: 1px solid rgba(0, 0, 0, 0.1);
@@ -244,6 +281,17 @@
             <div class="stat-box">
                 <span id="val-loss" class="stat-val">--</span>
                 <span class="label">Loss %</span>
+            </div>
+        </div>
+
+        <div class="network-info">
+            <div class="net-item">
+                <span id="net-ip" class="net-val">--</span>
+                <span class="net-label">Public IP</span>
+            </div>
+            <div class="net-item">
+                <span id="net-isp" class="net-val">--</span>
+                <span class="net-label">Provider</span>
             </div>
         </div>
 
@@ -602,10 +650,53 @@
         ui.btn.disabled = !online || isTesting;
     }
 
-    window.addEventListener('online', checkNet);
+    async function fetchNetworkInfo() {
+        const ipEl = document.getElementById('net-ip');
+        const ispEl = document.getElementById('net-isp');
+        ipEl.innerText = '...';
+        ispEl.innerText = '...';
+
+        // Primary: ipwho.is — HTTPS + CORS, no key, includes ISP/org
+        try {
+            const res = await fetch('https://ipwho.is/');
+            if (res.ok) {
+                const d = await res.json();
+                if (d && d.success !== false && d.ip) {
+                    ipEl.innerText = d.ip;
+                    const conn = d.connection || {};
+                    ispEl.innerText = conn.isp || conn.org || 'Unknown';
+                    return;
+                }
+            }
+        } catch (_) {}
+
+        // Fallback: ip-api.com (HTTP endpoint — works from file:// and http pages)
+        try {
+            const res = await fetch('http://ip-api.com/json/?fields=status,query,isp');
+            const d = await res.json();
+            if (d.status === 'success') {
+                ipEl.innerText = d.query;
+                ispEl.innerText = d.isp || 'Unknown';
+                return;
+            }
+        } catch (_) {}
+
+        // Last resort: public IP only
+        try {
+            const d = await (await fetch('https://api.ipify.org?format=json')).json();
+            ipEl.innerText = d.ip || 'N/A';
+            ispEl.innerText = 'Unknown';
+        } catch (_) {
+            ipEl.innerText = 'N/A';
+            ispEl.innerText = 'N/A';
+        }
+    }
+
+    window.addEventListener('online', () => { checkNet(); fetchNetworkInfo(); });
     window.addEventListener('offline', checkNet);
     ui.btn.addEventListener('click', startSuite);
     checkNet();
+    fetchNetworkInfo();
     </script>
 </body>
 </html>
