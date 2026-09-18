@@ -23,13 +23,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
         body {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             background: url('9.jpg');
-            background-size: 100% 100%;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--text-main);
             overscroll-behavior: none; 
         }
@@ -50,7 +53,8 @@
         .glass-panel {
             width: 98%;
             max-width: 920px;
-            min-height: 94vh;
+            min-height: auto;
+            max-height: 96vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -63,12 +67,13 @@
             padding: 28px;
             text-align: center;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+            margin: 10px 0;
         }
 
                 /* --- CLOCK STYLES --- */
         .login-widgets { width: 100%; display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-        .clock { font-size: 64px; font-weight: 600; color: #ffffff; text-shadow: 0 0 25px rgba(99, 102, 241, 0.6); line-height: 1; margin-bottom: 5px; letter-spacing: 2px; }
-        .date { font-size: 16px; color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 400; }
+        .clock { font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 600; color: #ffffff; text-shadow: 0 0 25px rgba(99, 102, 241, 0.6); line-height: 1; margin-bottom: 5px; letter-spacing: 2px; }
+        .date { font-size: clamp(0.7rem, 2vw, 1rem); color: rgba(255, 255, 255, 0.8); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 400; }
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .dot.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
         .dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
@@ -84,7 +89,7 @@
             border-radius: 50px;
             font-size: 0.85rem;
             font-weight: 700;
-            margin-bottom: 30px;
+            margin-bottom: clamp(12px, 3vh, 30px);
             border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
         }
@@ -92,22 +97,22 @@
         .gauges-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: clamp(12px, 2vw, 20px);
             width: 100%;
             max-width: 640px;
-            margin: 0 auto 24px;
+            margin: 0 auto clamp(12px, 3vh, 24px);
         }
 
         .gauge-box {
             position: relative;
             background: rgba(8, 6, 6, 0.242);
-            padding: 20px;
+            padding: clamp(12px, 2vw, 20px);
             border-radius: 64px;
             border: 1px solid rgba(0, 0, 0, 0.1);
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
         }
 
-        .gauge-svg { transform: rotate(-90deg); width: 100%; height: auto; max-width: 180px; }
+        .gauge-svg { transform: rotate(-90deg); width: 100%; height: auto; max-width: clamp(100px, 20vw, 180px); }
         .track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 12; }
         .fill-arc {
             fill: none;
@@ -126,7 +131,7 @@
             top: 58%; left: 50%;
             transform: translate(-50%, -50%);
         }
-        .speed-val { font-size: 1.8rem; font-weight: 800; display: block; line-height: 1; }
+        .speed-val { font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: 800; display: block; line-height: 1; }
         .label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub); opacity: 0.8; }
 
         .btn-main {
@@ -137,10 +142,10 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
-            padding: 20px;
+            padding: clamp(12px, 2.5vh, 20px);
             color: #fff;
             border-radius: 128px;
-            font-size: 1.1rem;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
             font-weight: 800;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
@@ -151,25 +156,25 @@
         .btn-main:active { transform: scale(0.98); }
         .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .info-text { margin-top: 20px; font-size: 0.9rem; color: var(--text-sub); min-height: 1.2em; }
+        .info-text { margin-top: clamp(10px, 2vh, 20px); font-size: clamp(0.75rem, 2vw, 0.9rem); color: var(--text-sub); min-height: 1.2em; }
 
         .stats-container {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
+            gap: clamp(8px, 1.5vw, 12px);
             width: 100%;
             max-width: 640px;
-            margin: 0 auto 18px;
+            margin: 0 auto clamp(10px, 2.5vh, 18px);
         }
 
         .network-info {
             width: 100%;
             max-width: 640px;
-            margin: 0 auto 18px;
+            margin: 0 auto clamp(10px, 2.5vh, 18px);
             background: rgba(8, 6, 6, 0.242);
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 32px;
-            padding: 14px 20px;
+            padding: clamp(10px, 1.5vh, 14px) clamp(12px, 2vw, 20px);
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
             display: flex;
             justify-content: space-between;
@@ -203,30 +208,41 @@
             background: rgba(8, 6, 6, 0.242);
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 32px;
-            padding: 12px 6px;
+            padding: clamp(8px, 1.5vh, 12px) 6px;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
         }
 
-        .stat-val { font-size: 1.3rem; font-weight: 800; display: block; line-height: 1.2; }
+        .stat-val { font-size: clamp(1rem, 3vw, 1.3rem); font-weight: 800; display: block; line-height: 1.2; }
         .stat-unit { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub); opacity: 0.8; }
 
         @media (max-width: 640px) {
-            .glass-panel { width: 100%; min-height: 98vh; padding: 20px; border-radius: 32px; }
-            .clock { font-size: 48px; }
-            .gauges-container { gap: 12px; margin-bottom: 20px; }
+            .glass-panel { width: 100%; max-height: none; padding: 20px; border-radius: 32px; }
+            .gauges-container { gap: 12px; margin-bottom: 16px; }
             .stats-container { gap: 8px; }
-            .status-pill { margin-bottom: 20px; }
+            .status-pill { margin-bottom: 16px; }
         }
 
         /* Short screens: landscape phones, small laptop windows */
         @media (max-height: 700px) {
-            .clock { font-size: 40px; }
-            .login-widgets { margin-bottom: 10px; }
-            .status-pill { margin-bottom: 12px; }
-            .gauges-container { margin-bottom: 12px; }
-            .gauge-svg { max-width: 140px; }
-            .btn-main { padding: 14px; }
-            .info-text { margin-top: 12px; }
+            .glass-panel { padding: 16px; }
+            .login-widgets { margin-bottom: 8px; }
+            .status-pill { margin-bottom: 10px; }
+            .gauges-container { margin-bottom: 10px; }
+            .gauge-svg { max-width: 120px; }
+            .btn-main { padding: 12px; }
+            .info-text { margin-top: 10px; }
+            .stat-box { padding: 8px 6px; }
+            .network-info { padding: 8px 12px; }
+        }
+
+        /* Very short screens */
+        @media (max-height: 500px) {
+            .glass-panel { padding: 12px; }
+            .gauge-svg { max-width: 90px; }
+            .readout { top: 60%; }
+            .speed-val { font-size: 1rem; }
+            .stat-val { font-size: 0.9rem; }
+            .btn-main { padding: 10px; font-size: 0.85rem; }
         }
     </style>
 </head>
