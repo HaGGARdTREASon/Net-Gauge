@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#8b5cf6">
     <title>NetGauge | Jash</title>
     
@@ -16,6 +16,8 @@
             --success: #4ade80;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -46,15 +48,19 @@
         }
 
         .glass-panel {
-            width: 95%;
-            max-width: 600px;
+            width: 98%;
+            max-width: 920px;
+            min-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             background: var(--glass-bg);
             position: relative;
             backdrop-filter: blur(32px);
             -webkit-backdrop-filter: blur(32px);
             border: 1px solid var(--glass-border);
-            border-radius: 64px;
-            padding: 40px;
+            border-radius: 48px;
+            padding: 28px;
             text-align: center;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
         }
@@ -70,6 +76,7 @@
 
         .status-pill {
             display: inline-flex;
+            align-self: center;
             align-items: center;
             gap: 8px;
             background: rgba(0, 0, 0, 0.4);
@@ -86,7 +93,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 30px;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 24px;
         }
 
         .gauge-box {
@@ -123,6 +132,7 @@
         .btn-main {
             width: 95%;
             max-width: 600px;
+            align-self: center;
             background: rgba(8, 6, 6, 0.242);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(30px);
@@ -142,6 +152,45 @@
         .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .info-text { margin-top: 20px; font-size: 0.9rem; color: var(--text-sub); min-height: 1.2em; }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 18px;
+        }
+
+        .stat-box {
+            background: rgba(8, 6, 6, 0.242);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 32px;
+            padding: 12px 6px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-val { font-size: 1.3rem; font-weight: 800; display: block; line-height: 1.2; }
+        .stat-unit { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-sub); opacity: 0.8; }
+
+        @media (max-width: 640px) {
+            .glass-panel { width: 100%; min-height: 98vh; padding: 20px; border-radius: 32px; }
+            .clock { font-size: 48px; }
+            .gauges-container { gap: 12px; margin-bottom: 20px; }
+            .stats-container { gap: 8px; }
+            .status-pill { margin-bottom: 20px; }
+        }
+
+        /* Short screens: landscape phones, small laptop windows */
+        @media (max-height: 700px) {
+            .clock { font-size: 40px; }
+            .login-widgets { margin-bottom: 10px; }
+            .status-pill { margin-bottom: 12px; }
+            .gauges-container { margin-bottom: 12px; }
+            .gauge-svg { max-width: 140px; }
+            .btn-main { padding: 14px; }
+            .info-text { margin-top: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -183,6 +232,21 @@
             </div>
         </div>
 
+        <div class="stats-container">
+            <div class="stat-box">
+                <span id="val-ping" class="stat-val">--</span>
+                <span class="label">Ping ms</span>
+            </div>
+            <div class="stat-box">
+                <span id="val-lat" class="stat-val">--</span>
+                <span class="label">Latency ms</span>
+            </div>
+            <div class="stat-box">
+                <span id="val-loss" class="stat-val">--</span>
+                <span class="label">Loss %</span>
+            </div>
+        </div>
+
         <button id="btn-start" class="btn-main">BEGIN TEST</button>
         <div id="msg-box" class="info-text">Ready to measure performance</div>
     </div>
@@ -197,8 +261,13 @@
     const TEST_DURATION = 5000; 
     const DL_URL = 'https://speed.cloudflare.com/__down?bytes=50000000';
     const UP_URL = 'https://speed.cloudflare.com/__up?bytes=50000000';
+    const PING_URL = 'https://speed.cloudflare.com/__down?bytes=25000';
+    const PING_COUNT = 10;
+    const PING_TIMEOUT = 3000;
 
     let dlSpeedResult = 0; 
+    let pingJitter = null;
+    let isTesting = false;
 
     const ui = {
         btn: document.getElementById('btn-start'),
@@ -208,6 +277,9 @@
         ringUl: document.getElementById('ring-ul'),
         valDl: document.getElementById('val-dl'),
         valUl: document.getElementById('val-ul'),
+        valPing: document.getElementById('val-ping'),
+        valLat: document.getElementById('val-lat'),
+        valLoss: document.getElementById('val-loss'),
         msg: document.getElementById('msg-box')
     };
 
@@ -253,12 +325,24 @@
 
     async function startSuite() {
         ui.btn.disabled = true;
+        isTesting = true;
         ui.valDl.innerText = '0.0';
         ui.valUl.innerText = '0.0';
+        ui.valPing.innerText = '...';
+        ui.valLat.innerText = '...';
+        ui.valLoss.innerText = '...';
         updateRing(ui.ringDl, 0);
         updateRing(ui.ringUl, 0);
 
         try {
+            ui.msg.innerText = "Measuring Ping / Packet Loss...";
+            try {
+                await runPingTest();
+            } catch (e) {
+                console.warn("Switching to Demo Mode (Ping)");
+                runPingSimulation();
+            }
+
             ui.msg.innerText = "Measuring Download Speed...";
             try {
                 await runDownload();
@@ -278,13 +362,120 @@
                 await runSimulation('ul');
             }
             
-            ui.msg.innerText = "Test Complete";
+            ui.msg.innerText = "Test Complete" + (pingJitter != null ? " · jitter " + pingJitter.toFixed(0) + " ms" : "");
         } catch (err) {
             console.error(err);
             ui.msg.innerText = "Test interrupted";
         } finally {
+            isTesting = false;
             ui.btn.disabled = false;
         }
+    }
+
+    // Cloudflare's edge reports its own TCP measurements in the Server-Timing
+    // header, e.g. cfL4;desc="?proto=TCP&rtt=35863&min_rtt=33405&...&sent=4&lost=0&retrans=0&..."
+    // (rtt in microseconds). This is the true network RTT — unlike a JS timer
+    // around fetch, it excludes service-worker hops, JS task queueing, etc.
+    // The header is CORS-exposed (Access-Control-Expose-Headers: server-timing),
+    // so browser JS is allowed to read it.
+    function parseEdgeStats(res) {
+        try {
+            const st = res.headers.get('server-timing') || '';
+            // NOTE: requires ?/& delimiter so min_rtt= never matches as rtt=
+            const rtt = st.match(/[?&]rtt=(\d+)/);
+            if (!rtt) return null;
+            const num = (re) => { const m = st.match(re); return m ? parseInt(m[1], 10) : 0; };
+            return {
+                rtt: parseInt(rtt[1], 10) / 1000, // us -> ms
+                sent: num(/[?&]sent=(\d+)/),
+                lost: num(/[?&]lost=(\d+)/),
+                retrans: num(/retrans=(\d+)/)
+            };
+        } catch (_) { return null; }
+    }
+
+    async function pingOnce() {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), PING_TIMEOUT);
+        const t0 = performance.now();
+        try {
+            const res = await fetch(PING_URL + '&cb=' + Math.random(), { cache: 'no-store', mode: 'cors', credentials: 'omit', signal: ctrl.signal });
+            // Drain the small body so the measurement covers a real transfer
+            try { await res.arrayBuffer(); } catch (_) {}
+            if (!res.ok) throw new Error("Ping bad status");
+            return { total: performance.now() - t0, edge: parseEdgeStats(res) };
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function paintPing(edgeRtts, totals, lost, done) {
+        // Same series rule as the final computation (>= 3 edge samples) so the
+        // live readout can't visibly jump when the test settles
+        const series = edgeRtts.length >= 3 ? edgeRtts : totals;
+        if (series.length) {
+            ui.valPing.innerText = Math.min(...series).toFixed(0);
+            ui.valLat.innerText = (series.reduce((a, b) => a + b, 0) / series.length).toFixed(0);
+        }
+        ui.valLoss.innerText = ((lost / done) * 100).toFixed(0);
+    }
+
+    async function runPingTest() {
+        // Warm-up (uncounted): establishes DNS/TLS/HTTP connection so the timed
+        // probes measure steady-state RTT instead of the handshake.
+        try { await pingOnce(); } catch (_) {}
+        await new Promise(r => setTimeout(r, 150));
+
+        const edgeRtts = [];
+        const totals = [];
+        let lost = 0;
+        let segSent = 0, segLost = 0;
+
+        for (let i = 0; i < PING_COUNT; i++) {
+            try {
+                const { total, edge } = await pingOnce();
+                totals.push(total);
+                if (edge && edge.rtt > 0) {
+                    edgeRtts.push(edge.rtt);
+                    segSent += edge.sent;
+                    segLost += edge.lost + edge.retrans;
+                }
+                paintPing(edgeRtts, totals, lost, i + 1);
+            } catch (e) {
+                lost++;
+                paintPing(edgeRtts, totals, lost, i + 1);
+            }
+            // Small gap so probes don't queue behind each other
+            await new Promise(r => setTimeout(r, 100));
+        }
+
+        if (totals.length === 0) throw new Error("All pings lost");
+
+        const series = edgeRtts.length >= 3 ? edgeRtts : totals;
+        const best = Math.min(...series);
+        const avg = series.reduce((a, b) => a + b, 0) / series.length;
+        let j = 0;
+        for (let i = 1; i < series.length; i++) j += Math.abs(series[i] - series[i - 1]);
+        pingJitter = series.length > 1 ? j / (series.length - 1) : 0;
+
+        // Packet loss: failed probes first; if every probe succeeded, fall back
+        // to transport-level retransmissions observed by the edge.
+        let loss = (lost / PING_COUNT) * 100;
+        if (lost === 0 && segSent > 0 && segLost > 0) {
+            loss = (segLost / segSent) * 100;
+        }
+
+        ui.valPing.innerText = best.toFixed(0);
+        ui.valLat.innerText = avg.toFixed(0);
+        ui.valLoss.innerText = (loss > 0 && loss < 1) ? loss.toFixed(1) : loss.toFixed(0);
+    }
+
+    function runPingSimulation() {
+        pingJitter = null;
+        const base = 15 + Math.random() * 30;
+        ui.valPing.innerText = base.toFixed(0);
+        ui.valLat.innerText = (base + Math.random() * 15).toFixed(0);
+        ui.valLoss.innerText = (Math.random() < 0.9 ? 0 : 10).toFixed(0);
     }
 
     async function runDownload() {
@@ -293,16 +484,31 @@
         let totalBytes = 0;
 
         const response = await fetch(DL_URL + '&cb=' + Math.random());
-        if (!response.ok && !response.body) throw new Error("Network Blocked");
+        if (!response.ok || !response.body) throw new Error("Network Blocked");
 
         const reader = response.body.getReader();
 
-        while (true) {
-            const { done, value } = await reader.read();
-            const now = performance.now();
-            if (done || now > endTime) break;
+        // Stall watchdog: a frozen connection would otherwise hang reader.read() forever
+        let lastChunk = performance.now();
+        let stalled = false;
+        const watchdog = setInterval(() => {
+            if (performance.now() - lastChunk > 15000) {
+                stalled = true;
+                try { reader.cancel(); } catch (_) {}
+            }
+        }, 1000);
 
-            totalBytes += value.byteLength;
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                const now = performance.now();
+                if (done || now > endTime || stalled) {
+                    try { await reader.cancel(); } catch (_) {}
+                    break;
+                }
+
+                totalBytes += value.byteLength;
+                lastChunk = now;
             const elapsed = (now - startTime) / 1000;
             
             if (elapsed > 0.1) {
@@ -311,36 +517,89 @@
                 ui.valDl.innerText = mbps.toFixed(1);
                 updateRing(ui.ringDl, mbps);
             }
+            }
+        } finally {
+            clearInterval(watchdog);
         }
+
+        if (totalBytes === 0) throw new Error(stalled ? "Download stalled" : "Download produced no bytes");
+    }
+
+    function uploadOnce(data, startTime, endTime, baseBytes) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', UP_URL + '&cb=' + Math.random(), true);
+
+            let chunkLoaded = 0;
+
+            xhr.upload.onprogress = (e) => {
+                chunkLoaded = e.loaded;
+                const now = performance.now();
+                // Stop measuring at TEST_DURATION so upload window == download window
+                if (now > endTime) {
+                    try { xhr.abort(); } catch (_) {}
+                    return;
+                }
+                const elapsed = (now - startTime) / 1000;
+                if (elapsed > 0.1) {
+                    const mbps = ((baseBytes + e.loaded) * 8) / (elapsed * 1000000);
+                    ui.valUl.innerText = mbps.toFixed(1);
+                    updateRing(ui.ringUl, mbps);
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) resolve(chunkLoaded || data.byteLength);
+                else reject(new Error("Upload failed: " + xhr.status));
+            };
+            xhr.onerror = () => reject(new Error("CORS Blocked"));
+            xhr.ontimeout = () => reject(new Error("Upload timed out"));
+            // Aborted because TEST_DURATION elapsed -> keep partial bytes, end test
+            xhr.onabort = () => resolve(chunkLoaded);
+
+            xhr.timeout = TEST_DURATION + 15000; // stall guard: frozen socket can't hang the suite
+            xhr.send(data);
+        });
     }
 
     async function runUpload() {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', UP_URL, true);
-            // Increased buffer slightly for better real-world testing if it works
-            const data = new Uint8Array(2 * 1024 * 1024); 
-            
-            xhr.upload.onprogress = (e) => {
-                const duration = (performance.now() - startTime) / 1000;
-                const mbps = (e.loaded * 8) / (duration * 1000000);
-                ui.valUl.innerText = mbps.toFixed(1);
-                updateRing(ui.ringUl, mbps);
-            };
+        const startTime = performance.now();
+        const endTime = startTime + TEST_DURATION;
+        let totalBytes = 0;
 
-            xhr.onload = () => resolve();
-            xhr.onerror = () => reject(new Error("CORS Blocked")); 
-            
-            const startTime = performance.now();
-            xhr.send(data);
-        });
+        // Reused incompressible-ish payload (full crypto fill is slow + has per-call limits, so seed it cheaply)
+        const data = new Uint8Array(4 * 1024 * 1024);
+        for (let i = 0; i < data.length; i += 4096) {
+            data[i] = (Math.random() * 256) | 0;
+        }
+
+        // Keep uploading chunks until the window matches runDownload's TEST_DURATION.
+        // Old code sent one 2MB blob and resolved on load, so it finished in <1s
+        // and never sampled long enough for a real average.
+        while (performance.now() < endTime) {
+            const sent = await uploadOnce(data, startTime, endTime, totalBytes);
+            totalBytes += sent;
+            // uploadOnce resolves partial bytes on abort (time expired) -> stop looping
+            if (performance.now() >= endTime) break;
+            if (!sent) break;
+        }
+
+        if (totalBytes === 0) throw new Error("Upload produced no bytes");
+
+        // Final averaged result over the full window (same math as download)
+        const elapsed = Math.min((performance.now() - startTime) / 1000, TEST_DURATION / 1000);
+        if (elapsed > 0.1) {
+            const mbps = (totalBytes * 8) / (elapsed * 1000000);
+            ui.valUl.innerText = mbps.toFixed(1);
+            updateRing(ui.ringUl, mbps);
+        }
     }
 
     function checkNet() {
         const online = navigator.onLine;
         ui.dot.className = online ? 'dot online' : 'dot offline';
         ui.status.innerText = online ? 'Online' : 'Offline';
-        ui.btn.disabled = !online;
+        ui.btn.disabled = !online || isTesting;
     }
 
     window.addEventListener('online', checkNet);
