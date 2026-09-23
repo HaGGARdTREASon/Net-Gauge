@@ -33,8 +33,9 @@
             --radius-sm: 14px;
             color-scheme: dark;
 
-            /* --- iOS 26 Liquid Glass tokens --- */
-            --liquid-blur: 28px;
+            /* --- iOS 26 Liquid Glass tokens (blur kept modest: large radii
+               multiply compositing cost on scroll) --- */
+            --liquid-blur: 16px;
             --liquid-sat: 1.8;
             --liquid-tint: rgba(255,255,255,0.032);
             --liquid-tint-strong: rgba(255,255,255,0.056);
@@ -83,7 +84,9 @@
             align-items: flex-start;
             padding: 18px 12px 32px;
             color: var(--text-main);
-            background: var(--bg-deep) url('9.jpg') center / cover no-repeat fixed;
+            /* Scroll-anchored wallpaper: `fixed` forces a full repaint on every
+               scroll frame (worst on mobile), so keep it scrolling. */
+            background: var(--bg-deep) url('9.jpg') center / cover no-repeat;
             overflow-x: hidden;
             position: relative;
             -webkit-font-smoothing: antialiased;
@@ -96,11 +99,12 @@
             z-index: -1;
             overflow: hidden;
             pointer-events: none;
+            contain: strict;
         }
         .liquid-orbs i {
             position: absolute;
             border-radius: 50%;
-            filter: blur(60px) saturate(1.4);
+            filter: blur(40px) saturate(1.4);
             opacity: 0.4;
             animation: orbFloat 18s ease-in-out infinite alternate;
             will-change: transform;
@@ -353,8 +357,7 @@
         .unit-toggle {
             display: flex;
             background: linear-gradient(180deg, rgba(255,255,255,0.056), rgba(255,255,255,0.02));
-            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
-            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             box-shadow: var(--liquid-inset), 0 8px 20px -10px rgba(0,0,0,0.4);
             border-radius: 50px;
@@ -391,8 +394,7 @@
             border-radius: var(--radius-sm);
             border-radius: 14px / 16px;
             background: linear-gradient(180deg, rgba(255,255,255,0.048), rgba(255,255,255,0.012));
-            backdrop-filter: blur(18px) saturate(1.6);
-            -webkit-backdrop-filter: blur(18px) saturate(1.6);
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.112);
             font-size: 0.75rem;
@@ -454,8 +456,7 @@
             background:
                 radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.096), transparent 55%),
                 linear-gradient(180deg, var(--liquid-tint-strong), var(--liquid-tint) 45%, rgba(255,255,255,0.012));
-            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
-            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             padding: 18px 14px 20px;
             border-radius: 24px;
             border-radius: 24px / 26px;
@@ -516,8 +517,7 @@
                 radial-gradient(110% 70% at 50% 0%, rgba(255,255,255,0.072), transparent 58%),
                 linear-gradient(180deg, var(--liquid-tint-strong), rgba(255,255,255,0.016)),
                 var(--card-bg);
-            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
-            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             border-radius: var(--radius-md);
             border-radius: 20px / 22px;
@@ -555,8 +555,7 @@
             background:
                 radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.088), transparent 60%),
                 linear-gradient(180deg, var(--liquid-tint-strong), rgba(255,255,255,0.016));
-            backdrop-filter: blur(22px) saturate(1.7);
-            -webkit-backdrop-filter: blur(22px) saturate(1.7);
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             border-radius: 18px;
             border-radius: 18px / 20px;
@@ -593,8 +592,7 @@
                 radial-gradient(110% 80% at 50% 0%, rgba(255,255,255,0.072), transparent 60%),
                 linear-gradient(180deg, var(--liquid-tint-strong), var(--liquid-tint)),
                 var(--card-bg);
-            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
-            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             border-radius: var(--radius-md);
             border-radius: 20px / 22px;
@@ -705,6 +703,9 @@
             box-shadow: var(--liquid-shadow), var(--liquid-inset);
             overflow: hidden;
             isolation: isolate;
+            /* Skip rendering work while off-screen (below the fold). */
+            content-visibility: auto;
+            contain-intrinsic-size: auto 220px;
         }
         .history-card::before {
             content: '';
@@ -729,8 +730,7 @@
             gap: 6px 14px;
             align-items: center;
             background: linear-gradient(180deg, rgba(255,255,255,0.048), rgba(255,255,255,0.012));
-            backdrop-filter: blur(16px) saturate(1.5);
-            -webkit-backdrop-filter: blur(16px) saturate(1.5);
+            /* No backdrop-filter: nested inside the already-blurred panel. */
             border: 1px solid var(--liquid-edge-dim);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.088);
             border-radius: 16px;
@@ -926,6 +926,9 @@
         .actions-verdict .icon-btn:active { transform: translateY(-50%) scale(0.95); }
 
         @media (max-width: 640px) {
+            /* Mobile GPU relief: static orbs (no per-frame repaint), wallpaper
+               already scroll-anchored above. */
+            .liquid-orbs i { animation: none; }
             body { padding: 12px 8px 24px; }
             .glass-panel { border-radius: 24px; padding: 18px 14px; }
             .topbar { padding: 4px 2px 0; }
