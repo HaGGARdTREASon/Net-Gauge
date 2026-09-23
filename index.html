@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b1020">
+    <meta name="color-scheme" content="dark light">
     <meta name="description" content="NetGauge — beautiful, fast, private internet speed test. Ping, jitter, download, upload, loss and history.">
     <title>NetGauge | Jash</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3653/3653139.png">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3653/3653139.png">
+    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="icon" href="./icon.svg" type="image/svg+xml">
     <style>
         :root {
             --bg-deep: #0b1020;
@@ -854,8 +855,9 @@
     function drawGraph() {
         const W = graph.width, H = graph.height;
         gtx.clearRect(0, 0, W, H);
+        const light = document.documentElement.getAttribute('data-theme') === 'light';
         // grid
-        gtx.strokeStyle = 'rgba(255,255,255,0.07)';
+        gtx.strokeStyle = light ? 'rgba(15,23,42,0.09)' : 'rgba(255,255,255,0.07)';
         gtx.lineWidth = 1;
         for (let i = 1; i < 4; i++) {
             gtx.beginPath();
@@ -884,17 +886,13 @@
             const lastX = (W - (Math.min(series.length, 90) / 90) * W);
             gtx.lineTo(lastX, H);
             gtx.closePath();
-            const grad = gtx.createLinearGradient(0, 0, 0, H);
-            grad.addColorStop(0, color.replace(')', ',0.28)').replace('rgb', 'rgba').replace('#', ''));
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            // fallback for hex colors
             gtx.fillStyle = color === '#38bdf8' ? 'rgba(56,189,248,0.14)' : 'rgba(244,114,182,0.14)';
             gtx.fill();
         };
         draw(dlSeries, '#38bdf8', '#38bdf8');
         draw(ulSeries, '#f472b6', '#f472b6');
         if (!dlSeries.length && !ulSeries.length) {
-            gtx.fillStyle = 'rgba(255,255,255,0.35)';
+            gtx.fillStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.35)';
             const s = Math.max(11, W / 42);
             gtx.font = `600 ${s}px Inter, sans-serif`;
             gtx.textAlign = 'center';
@@ -1344,6 +1342,24 @@
         try { localStorage.setItem('netgauge-unit', u); } catch (_) {}
     }
 
+    /* ---------- theme (light / dark) ---------- */
+    function setTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        const btn = $('btn-theme');
+        if (btn) btn.textContent = t === 'light' ? '☀️' : '🌙';
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', t === 'light' ? '#eef2ff' : '#0b1020');
+        try { localStorage.setItem('netgauge-theme', t); } catch (_) {}
+        drawGraph();
+    }
+    function initTheme() {
+        let saved = null;
+        try { saved = localStorage.getItem('netgauge-theme'); } catch (_) {}
+        if (saved === 'light' || saved === 'dark') { setTheme(saved); return; }
+        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        setTheme(prefersLight ? 'light' : 'dark');
+    }
+
     /* ---------- events ---------- */
     window.addEventListener('online', () => { checkNet(); fetchNetworkInfo(); paintConnInfo(); });
     window.addEventListener('offline', checkNet);
@@ -1358,8 +1374,14 @@
     });
     $('unit-mbps').addEventListener('click', () => setUnit('Mbps'));
     $('unit-mbps2').addEventListener('click', () => setUnit('MBps'));
+    $('btn-theme').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        setTheme(cur);
+        toast(cur === 'light' ? 'Light mode on' : 'Dark mode on');
+    });
 
     /* ---------- init ---------- */
+    initTheme();
     try {
         const saved = localStorage.getItem('netgauge-unit');
         if (saved === 'MBps') setUnit('MBps');
@@ -1379,10 +1401,16 @@
             const [t, s] = verdictText(lastResults.dl, lastResults.ping || 0);
             setVerdict(t + ' (last test)', s, g);
             dlSpeedResult = lastResults.dl; ulSpeedResult = lastResults.ul;
+            lastPing = lastResults.ping; lastLoss = lastResults.loss;
+            pingJitter = lastResults.jitter;
+            dlPeak = lastResults.dl; ulPeak = lastResults.ul;
             paintSpeeds(dlSpeedResult, ulSpeedResult);
             ui.valPing.innerText = lastResults.ping ?? '--';
             ui.valJitter.innerText = lastResults.jitter ?? '--';
+            ui.valLat.innerText = lastResults.ping ?? '--';
             ui.valLoss.innerText = lastResults.loss ?? '--';
+            ui.peakDl.innerText = 'peak ' + fmtSpeed(dlPeak) + ' ' + unitLabel();
+            ui.peakUl.innerText = 'peak ' + fmtSpeed(ulPeak) + ' ' + unitLabel();
             ui.lastRun.innerText = 'Last run ' + new Date(lastResults.t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
     })();
