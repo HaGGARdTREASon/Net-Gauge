@@ -43,8 +43,6 @@
             --liquid-inner-hi: rgba(255,255,255,0.22);
             --liquid-shadow: 0 24px 60px -12px rgba(0,0,0,0.55), 0 8px 24px -8px rgba(0,0,0,0.4);
             --liquid-inset: inset 0 1px 1px rgba(255,255,255,0.16), inset 0 -1px 1px rgba(255,255,255,0.032), inset 1px 0 1px rgba(255,255,255,0.048), inset -1px 0 1px rgba(255,255,255,0.048);
-            --mx: 50%;
-            --my: 0%;
         }
 
         /* Light theme variable overrides */
@@ -161,7 +159,25 @@
             display: flex;
             align-items: center;
             gap: 11px;
+            background: linear-gradient(180deg, var(--liquid-tint-strong), var(--liquid-tint));
+            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.08);
+            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.08);
+            border: 1px solid var(--liquid-edge-dim);
+            border-radius: 18px;
+            padding: 8px 14px 8px 8px;
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
+            position: relative;
+            overflow: hidden;
         }
+        .brand::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent);
+            pointer-events: none;
+        }
+        .brand > * { position: relative; z-index: 1; }
         .brand-mark {
             width: 44px; height: 44px;
             border-radius: 15px;
@@ -192,8 +208,29 @@
         .brand small { display: block; font-size: 0.68rem; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-dim); margin-top: 4px; }
 
         .top-right { display: flex; align-items: center; gap: 10px; }
-        .clock-wrap { text-align: right; line-height: 1.1; }
-        .clock { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; text-shadow: 0 0 22px rgba(99,102,241,0.6); }
+        .clock-wrap {
+            text-align: right;
+            line-height: 1.1;
+            background: linear-gradient(180deg, var(--liquid-tint-strong), var(--liquid-tint));
+            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.08);
+            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.08);
+            border: 1px solid var(--liquid-edge-dim);
+            border-radius: 16px;
+            padding: 8px 14px;
+            box-shadow: var(--liquid-shadow), var(--liquid-inset);
+            position: relative;
+            overflow: hidden;
+        }
+        .clock-wrap::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent);
+            pointer-events: none;
+        }
+        .clock-wrap > * { position: relative; z-index: 1; }
+        .clock { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 1px; color: var(--text-main); text-shadow: 0 0 22px rgba(99,102,241,0.35); }
         .date { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.4px; margin-top: 2px; font-weight: 600; }
 
         .status-pill {
@@ -294,6 +331,24 @@
         .verdict { display: flex; align-items: center; gap: 12px; }
         .verdict h2 { font-size: 1.05rem; font-weight: 800; }
         .verdict p { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
+
+        /* Swapped layout: BEGIN TEST centered on top, verdict at bottom */
+        .panel-head-center {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: center;
+            text-align: center;
+        }
+        .panel-head-center .btn-top {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .panel-head-center .unit-toggle {
+            margin: 0 auto;
+        }
+        .actions-verdict { align-items: center; }
+        .verdict-bottom { flex: 1; justify-content: center; text-align: center; }
 
         .unit-toggle {
             display: flex;
@@ -536,10 +591,10 @@
             gap: 10px;
             background:
                 radial-gradient(110% 80% at 50% 0%, rgba(255,255,255,0.072), transparent 60%),
-                linear-gradient(180deg, var(--liquid-tint-strong), rgba(255,255,255,0.016)),
+                linear-gradient(180deg, var(--liquid-tint-strong), var(--liquid-tint)),
                 var(--card-bg);
-            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
-            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat));
+            backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
+            -webkit-backdrop-filter: blur(var(--liquid-blur)) saturate(var(--liquid-sat)) brightness(1.05);
             border: 1px solid var(--liquid-edge-dim);
             border-radius: var(--radius-md);
             border-radius: 20px / 22px;
@@ -553,10 +608,11 @@
             content: '';
             position: absolute;
             inset: 0 0 auto 0;
-            height: 52px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent);
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent);
             pointer-events: none;
         }
+        .network-info > * { position: relative; z-index: 1; }
         .net-item { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; text-align: center; }
         .net-ico { font-size: 0.95rem; }
         .net-val { font-size: 0.85rem; font-weight: 800; color: var(--text-main); word-break: break-word; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -797,9 +853,77 @@
         [data-theme="light"] .phase .p-dot { background: rgba(15,23,42,0.2); }
         [data-theme="light"] .phase.active { color: #0c4a6e; }
         [data-theme="light"] .unit-toggle button.active { color: #fff; }
-        [data-theme="light"] .clock { text-shadow: 0 0 18px rgba(56,189,248,0.35); }
         [data-theme="light"] footer { color: rgba(15,23,42,0.5); }
         [data-theme="light"] #toast { background: linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.78)); color: #fff; }
+
+        /* ---------- Uniform 20% white bars + true-centered verdict ---------- */
+        .brand, .clock-wrap, .status-pill, .theme-btn,
+        .glass-panel, .history-card,
+        .phase, .gauge-box, .graph-card, .stat-box, .network-info,
+        .unit-toggle, .icon-btn, .h-row, .history-empty, .peak, .graph-unit {
+            background: rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,0.2);
+            border: 1px solid rgba(15,23,42,0.08);
+        }
+        /* Flat fill only — drop extra white gloss layers so bars stay at 20% */
+        .glass-spec,
+        .brand::before, .clock-wrap::before, .status-pill::before,
+        .gauge-box::before, .graph-card::before, .stat-box::before,
+        .history-card::before, .network-info::before,
+        .icon-btn::before, .theme-btn::before,
+        .phase::before, .h-row::before { display: none; }
+        .brand > *, .clock-wrap > *, .history-card > *,
+        .gauge-box > *, .network-info > * { position: relative; z-index: 1; }
+
+        /* Dark text on the white bars (both themes) */
+        .brand h1 { color: #0f172a; }
+        .brand small { color: rgba(15,23,42,0.6); }
+        .clock { color: #0f172a; text-shadow: none; }
+        .date { color: rgba(15,23,42,0.6); }
+        #status-txt { color: #0f172a; }
+        .theme-btn, .icon-btn { color: #0f172a; }
+        .glass-panel, .history-card { color: #0f172a; }
+        .verdict h2 { color: #0f172a; }
+        .verdict p { color: rgba(15,23,42,0.6); }
+        .phase { color: rgba(15,23,42,0.65); }
+        .phase.active { color: #0c4a6e; }
+        .phase.done { color: #16a34a; }
+        .g-label { color: rgba(15,23,42,0.7); }
+        .speed-val { color: #0f172a; }
+        .speed-unit { color: rgba(15,23,42,0.6); }
+        .peak { color: rgba(15,23,42,0.65); }
+        .stat-val { color: #0f172a; }
+        .stat-unit { color: rgba(15,23,42,0.6); }
+        .net-val { color: #0f172a; }
+        .net-label { color: rgba(15,23,42,0.6); }
+        .graph-head h3 { color: rgba(15,23,42,0.7); }
+        .legend { color: rgba(15,23,42,0.6); }
+        .graph-unit { color: #0f172a; }
+        .history-head h3 { color: #0f172a; }
+        .history-head h3 span { color: rgba(15,23,42,0.55); }
+        .h-time { color: #0f172a; }
+        .h-time small { color: rgba(15,23,42,0.55); }
+        .h-m b { color: #0f172a; }
+        .h-m span { color: rgba(15,23,42,0.55); }
+        .h-dl b { color: #0284c7; }
+        .h-ul b { color: #db2777; }
+        .history-empty { color: rgba(15,23,42,0.6); border-color: rgba(15,23,42,0.2); }
+        .info-text { color: rgba(15,23,42,0.7); }
+        .info-text .ok { color: #16a34a; }
+        .meta-row { color: rgba(15,23,42,0.55); }
+        .unit-toggle button { color: rgba(15,23,42,0.6); }
+        .link-btn { color: #dc2626; }
+        .glass-panel .track { stroke: rgba(15,23,42,0.12); }
+        .progress-track { background: rgba(15,23,42,0.08); border-color: rgba(15,23,42,0.08); box-shadow: inset 0 1px 2px rgba(15,23,42,0.15); }
+
+        /* True-centered verdict: text centered, copy/share pinned right */
+        .actions-verdict { position: relative; justify-content: center; align-items: center; min-height: 56px; }
+        .verdict-bottom { flex: 1; justify-content: center; text-align: center; padding: 0 140px; }
+        .actions-verdict .icon-btn { position: absolute; top: 50%; transform: translateY(-50%); }
+        .actions-verdict #btn-copy { right: 66px; }
+        .actions-verdict #btn-share { right: 0; }
+        .actions-verdict .icon-btn:hover { transform: translateY(-50%); }
+        .actions-verdict .icon-btn:active { transform: translateY(-50%) scale(0.95); }
 
         @media (max-width: 640px) {
             body { padding: 12px 8px 24px; }
@@ -812,7 +936,11 @@
             .gauge-svg { max-width: 150px; }
             .h-row { grid-template-columns: auto 1fr auto; }
             .h-row .h-hide-m { display: none; }
-            .actions .btn-main { font-size: 0.9rem; padding: 15px; }
+            .panel-head-center .btn-top { font-size: 0.9rem; padding: 15px; }
+            .actions-verdict { min-height: 0; justify-content: space-between; }
+            .verdict-bottom { padding: 0; text-align: left; justify-content: flex-start; }
+            .actions-verdict .icon-btn { position: static; transform: none; }
+            .actions-verdict .icon-btn:active { transform: scale(0.95); }
         }
         @media (max-height: 700px) {
             .gauge-svg { max-width: 140px; }
@@ -850,13 +978,8 @@
 
         <div class="glass-panel">
             <div class="glass-spec" aria-hidden="true"></div>
-            <div class="panel-head">
-                <div class="verdict">
-                    <div>
-                        <h2 id="verdict-title">Ready to test</h2>
-                        <p id="verdict-sub">Ping · download · upload · loss</p>
-                    </div>
-                </div>
+            <div class="panel-head panel-head-center">
+                <button id="btn-start" class="btn-main btn-top">BEGIN TEST</button>
                 <div class="unit-toggle" role="group" aria-label="Speed units">
                     <button id="unit-mbps" class="active" type="button">Mbps</button>
                     <button id="unit-mbps2" type="button">MB/s</button>
@@ -947,8 +1070,13 @@
                 <div class="net-item"><span class="net-ico">📍</span><span id="net-loc" class="net-val">--</span><span class="net-label">Location</span></div>
             </div>
 
-            <div class="actions">
-                <button id="btn-start" class="btn-main">BEGIN TEST</button>
+            <div class="actions actions-verdict">
+                <div class="verdict verdict-bottom">
+                    <div>
+                        <h2 id="verdict-title">Ready to test</h2>
+                        <p id="verdict-sub">Ping · download · upload · loss</p>
+                    </div>
+                </div>
                 <button id="btn-copy" class="icon-btn" title="Copy results" aria-label="Copy results" disabled>⧉</button>
                 <button id="btn-share" class="icon-btn" title="Share results" aria-label="Share results" disabled>↗</button>
             </div>
@@ -1111,7 +1239,7 @@
         const W = graph.width, H = graph.height;
         gtx.clearRect(0, 0, W, H);
         const dpr = graph._dpr || window.devicePixelRatio || 1;
-        const light = document.documentElement.getAttribute('data-theme') === 'light';
+        const light = true; // bars are 20% white in both themes: always use dark grid/text
         const gridColor = light ? 'rgba(15,23,42,0.09)' : 'rgba(255,255,255,0.0084)';
         const textColor = light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.06)';
 
