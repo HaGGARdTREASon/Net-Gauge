@@ -360,7 +360,7 @@
         /* Network */
         .network-info {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -693,7 +693,6 @@
                 <div class="net-item"><span class="net-ico">🌐</span><span id="net-ip" class="net-val">--</span><span class="net-label">Public IP</span></div>
                 <div class="net-item"><span class="net-ico">🏢</span><span id="net-isp" class="net-val">--</span><span class="net-label">Provider</span></div>
                 <div class="net-item"><span class="net-ico">📍</span><span id="net-loc" class="net-val">--</span><span class="net-label">Location</span></div>
-                <div class="net-item"><span class="net-ico">📶</span><span id="net-conn" class="net-val">--</span><span class="net-label">Connection</span></div>
             </div>
 
             <div class="actions">
@@ -1209,20 +1208,6 @@
         ui.btn.disabled = !online;
     }
 
-    function paintConnInfo() {
-        const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        const el = $('net-conn');
-        if (!c) { el.innerText = navigator.onLine ? 'Online' : 'Offline'; el.title = ''; return; }
-        const parts = [];
-        if (c.effectiveType) parts.push(c.effectiveType.toUpperCase());
-        if (c.downlink) parts.push('~' + c.downlink + ' Mb/s');
-        el.innerText = parts.join(' ') || 'Unknown';
-        el.title = ['type=' + (c.type || '?'), 'rtt=' + (c.rtt ?? '?') + 'ms', 'saveData=' + !!c.saveData].join(' ');
-        if (c.addEventListener) {
-            c.addEventListener('change', paintConnInfo);
-        }
-    }
-
     async function fetchNetworkInfo() {
         const ipEl = $('net-ip'), ispEl = $('net-isp'), locEl = $('net-loc');
         ipEl.innerText = '...'; ispEl.innerText = '...'; locEl.innerText = '...';
@@ -1361,7 +1346,7 @@
     }
 
     /* ---------- events ---------- */
-    window.addEventListener('online', () => { checkNet(); fetchNetworkInfo(); paintConnInfo(); });
+    window.addEventListener('online', () => { checkNet(); fetchNetworkInfo(); });
     window.addEventListener('offline', checkNet);
     ui.btn.addEventListener('click', startSuite);
     ui.btnCopy.addEventListener('click', copyResults);
@@ -1387,7 +1372,6 @@
         if (saved === 'MBps') setUnit('MBps');
     } catch (_) {}
     checkNet();
-    paintConnInfo();
     fetchNetworkInfo();
     renderHistory();
     // restore last result for copy/share convenience
