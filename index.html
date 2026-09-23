@@ -290,9 +290,9 @@
         .gauge-box.ul:hover { box-shadow: 0 18px 40px -12px rgba(244,114,182,0.45); }
         .gauge-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
         .g-label { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-sub); }
-        .g-icon { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; font-size: 0.9rem; }
-        .dl .g-icon { background: rgba(56,189,248,0.18); border: 1px solid rgba(56,189,248,0.35); }
-        .ul .g-icon { background: rgba(244,114,182,0.16); border: 1px solid rgba(244,114,182,0.35); }
+        .g-icon { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; font-size: 0.9rem; color: #fff; }
+        .dl .g-icon { background: linear-gradient(135deg, #22d3ee, #3b82f6); box-shadow: 0 4px 12px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.35); }
+        .ul .g-icon { background: linear-gradient(135deg, #f472b6, #8b5cf6); box-shadow: 0 4px 12px rgba(244,114,182,0.45), inset 0 1px 0 rgba(255,255,255,0.35); }
         .peak { font-size: 0.68rem; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.3); padding: 4px 9px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.08); font-variant-numeric: tabular-nums; }
 
         .gauge-wrap { position: relative; display: flex; justify-content: center; }
@@ -306,8 +306,8 @@
             stroke-dashoffset: 565.48;
             transition: stroke-dashoffset 0.25s ease-out;
         }
-        #ring-dl { stroke: url(#gradDl); filter: drop-shadow(0 0 9px rgba(56,189,248,0.9)); }
-        #ring-ul { stroke: url(#gradUl); filter: drop-shadow(0 0 9px rgba(244,114,182,0.9)); }
+        #ring-dl { stroke: url(#gradDl); filter: drop-shadow(0 0 5px rgba(56,189,248,0.55)); }
+        #ring-ul { stroke: url(#gradUl); filter: drop-shadow(0 0 5px rgba(244,114,182,0.55)); }
 
         .readout { position: absolute; top: 56%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
         .speed-val { font-size: clamp(1.6rem, 5vw, 2.3rem); font-weight: 900; display: block; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
@@ -527,6 +527,8 @@
             background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,250,252,0.7));
         }
         [data-theme="light"] .track { stroke: rgba(15,23,42,0.1); }
+        [data-theme="light"] #ring-dl { filter: drop-shadow(0 0 3px rgba(56,189,248,0.35)); }
+        [data-theme="light"] #ring-ul { filter: drop-shadow(0 0 3px rgba(244,114,182,0.35)); }
         [data-theme="light"] .peak { background: rgba(15,23,42,0.06); border-color: rgba(15,23,42,0.1); }
         [data-theme="light"] .phase .p-dot { background: rgba(15,23,42,0.2); }
         [data-theme="light"] .phase.active { color: #0c4a6e; }
@@ -625,7 +627,7 @@
                         <div id="peak-dl" class="peak">peak –</div>
                     </div>
                     <div class="gauge-wrap">
-                        <svg class="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
+                        <svg class="gauge-svg" viewBox="0 0 220 220" aria-hidden="true">
                             <defs>
                                 <linearGradient id="gradDl" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#3b82f6"/>
@@ -634,8 +636,8 @@
                                     <stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#8b5cf6"/>
                                 </linearGradient>
                             </defs>
-                            <circle class="track" cx="100" cy="100" r="90"></circle>
-                            <circle id="ring-dl" class="fill-arc" cx="100" cy="100" r="90"></circle>
+                            <circle class="track" cx="110" cy="110" r="90"></circle>
+                            <circle id="ring-dl" class="fill-arc" cx="110" cy="110" r="90"></circle>
                         </svg>
                         <div class="readout">
                             <span id="val-dl" class="speed-val">0.0</span>
@@ -650,9 +652,9 @@
                         <div id="peak-ul" class="peak">peak –</div>
                     </div>
                     <div class="gauge-wrap">
-                        <svg class="gauge-svg" viewBox="0 0 200 200" aria-hidden="true">
-                            <circle class="track" cx="100" cy="100" r="90"></circle>
-                            <circle id="ring-ul" class="fill-arc" cx="100" cy="100" r="90"></circle>
+                        <svg class="gauge-svg" viewBox="0 0 220 220" aria-hidden="true">
+                            <circle class="track" cx="110" cy="110" r="90"></circle>
+                            <circle id="ring-ul" class="fill-arc" cx="110" cy="110" r="90"></circle>
                         </svg>
                         <div class="readout">
                             <span id="val-ul" class="speed-val">0.0</span>
@@ -790,9 +792,12 @@
         updateRing(ui.ringUl, ul);
     }
 
-    function pushSample(arr, v) {
-        arr.push(v);
-        if (arr.length > 90) arr.shift();
+    function pushPoint(dl, ul) {
+        // Shared timeline: both series always stay the same length so the
+        // upload line starts at the left edge (flat at 0) instead of mid-graph.
+        dlSeries.push(dl);
+        ulSeries.push(ul);
+        if (dlSeries.length > GRAPH_POINTS) { dlSeries.shift(); ulSeries.shift(); }
         drawGraph();
     }
 
@@ -842,61 +847,102 @@
     /* ---------- live graph ---------- */
     const graph = $('graph');
     const gtx = graph.getContext('2d');
+    const GRAPH_POINTS = 120; // shared timeline window for down + up lines
     function sizeGraph() {
         const r = graph.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
+        graph._dpr = dpr;
         graph.width = Math.max(300, r.width * dpr);
         graph.height = 110 * dpr;
         drawGraph();
     }
     window.addEventListener('resize', sizeGraph);
 
+    function niceAxisMax(v) {
+        if (v <= 10) return 10;
+        if (v <= 25) return 25;
+        if (v <= 50) return 50;
+        if (v <= 100) return 100;
+        if (v <= 250) return 250;
+        if (v <= 500) return 500;
+        return Math.ceil(v / 250) * 250;
+    }
+
     function drawGraph() {
         const W = graph.width, H = graph.height;
         gtx.clearRect(0, 0, W, H);
+        const dpr = graph._dpr || window.devicePixelRatio || 1;
         const light = document.documentElement.getAttribute('data-theme') === 'light';
-        // grid
-        gtx.strokeStyle = light ? 'rgba(15,23,42,0.09)' : 'rgba(255,255,255,0.07)';
+        const gridColor = light ? 'rgba(15,23,42,0.09)' : 'rgba(255,255,255,0.07)';
+        const textColor = light ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.5)';
+
+        // Right gutter holds the y-axis labels; plot area is to its left.
+        const gutter = Math.round(44 * dpr);
+        const plotW = Math.max(50, W - gutter);
+        const padT = 8 * dpr, padB = 8 * dpr;
+
+        const n = dlSeries.length; // == ulSeries.length (shared timeline)
+        const peak = n ? Math.max(...dlSeries, ...ulSeries) : 0;
+        const max = niceAxisMax(Math.max(10, peak));
+        const ticks = [max, max / 2, 0];
+
+        const yOf = (v) => H - padB - (Math.min(v, max) / max) * (H - padT - padB);
+        const slot = plotW / (GRAPH_POINTS - 1);
+        const xOf = (i) => i * slot;
+
+        // Gridlines + right-side y-axis values (Mbps)
         gtx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
+        gtx.font = `${9 * dpr}px Inter, sans-serif`;
+        gtx.textAlign = 'left';
+        gtx.textBaseline = 'middle';
+        ticks.forEach((t) => {
+            const y = Math.round(yOf(t)) + 0.5;
+            gtx.strokeStyle = gridColor;
             gtx.beginPath();
-            gtx.moveTo(0, (H / 4) * i);
-            gtx.lineTo(W, (H / 4) * i);
+            gtx.moveTo(0, y);
+            gtx.lineTo(plotW, y);
             gtx.stroke();
+            gtx.fillStyle = textColor;
+            gtx.fillText(String(parseFloat(t.toFixed(1))), plotW + 6 * dpr, yOf(t));
+        });
+
+        if (!n) {
+            gtx.fillStyle = light ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.35)';
+            const s = Math.max(11, plotW / 42);
+            gtx.font = `600 ${s}px Inter, sans-serif`;
+            gtx.textAlign = 'center';
+            gtx.fillText('Run a test to see live throughput', plotW / 2, H / 2 + s / 3);
+            return;
         }
-        const draw = (series, color, glow) => {
+
+        const draw = (series, color, glow, fill) => {
             if (series.length < 2) return;
-            const max = Math.max(10, ...dlSeries, ...ulSeries);
+            gtx.save();
+            gtx.beginPath();
+            gtx.rect(0, 0, plotW, H);
+            gtx.clip();
             gtx.beginPath();
             series.forEach((v, i) => {
-                const x = (i / 89) * W + (W - (Math.min(series.length, 90) / 90) * W);
-                const y = H - 6 - (Math.min(v, max) / max) * (H - 18);
+                const x = xOf(i), y = yOf(v);
                 if (i === 0) gtx.moveTo(x, y); else gtx.lineTo(x, y);
             });
             gtx.strokeStyle = color;
-            gtx.lineWidth = Math.max(2, W / 300);
+            gtx.lineWidth = Math.max(2, plotW / 300);
             gtx.lineJoin = 'round';
             gtx.shadowColor = glow;
             gtx.shadowBlur = 10;
             gtx.stroke();
             gtx.shadowBlur = 0;
             // fill under line
-            gtx.lineTo(W, H);
-            const lastX = (W - (Math.min(series.length, 90) / 90) * W);
-            gtx.lineTo(lastX, H);
+            gtx.lineTo(xOf(series.length - 1), H);
+            gtx.lineTo(xOf(0), H);
             gtx.closePath();
-            gtx.fillStyle = color === '#38bdf8' ? 'rgba(56,189,248,0.14)' : 'rgba(244,114,182,0.14)';
+            gtx.fillStyle = fill;
             gtx.fill();
+            gtx.restore();
         };
-        draw(dlSeries, '#38bdf8', '#38bdf8');
-        draw(ulSeries, '#f472b6', '#f472b6');
-        if (!dlSeries.length && !ulSeries.length) {
-            gtx.fillStyle = document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(15,23,42,0.4)' : 'rgba(255,255,255,0.35)';
-            const s = Math.max(11, W / 42);
-            gtx.font = `600 ${s}px Inter, sans-serif`;
-            gtx.textAlign = 'center';
-            gtx.fillText('Run a test to see live throughput', W / 2, H / 2 + s / 3);
-        }
+        draw(dlSeries, '#38bdf8', '#38bdf8', 'rgba(56,189,248,0.14)');
+        draw(ulSeries, '#f472b6', '#f472b6', 'rgba(244,114,182,0.14)');
     }
 
     /* ---------- clock ---------- */
@@ -932,12 +978,12 @@
                 if (type === 'dl') {
                     dlPeak = Math.max(dlPeak, currentSpeed);
                     ui.peakDl.innerText = 'peak ' + fmtSpeed(dlPeak) + ' ' + unitLabel();
-                    pushSample(dlSeries, currentSpeed);
+                    pushPoint(currentSpeed, 0);
                     paintSpeeds(currentSpeed, ulSpeedResult);
                 } else {
                     ulPeak = Math.max(ulPeak, currentSpeed);
                     ui.peakUl.innerText = 'peak ' + fmtSpeed(ulPeak) + ' ' + unitLabel();
-                    pushSample(ulSeries, currentSpeed);
+                    pushPoint(dlSpeedResult, currentSpeed);
                     paintSpeeds(dlSpeedResult, currentSpeed);
                 }
             }, 200);
@@ -1138,7 +1184,7 @@
                     dlPeak = Math.max(dlPeak, mbps);
                     ui.peakDl.innerText = 'peak ' + fmtSpeed(dlPeak) + ' ' + unitLabel();
                     paintSpeeds(mbps, ulSpeedResult);
-                    pushSample(dlSeries, mbps);
+                    pushPoint(mbps, 0);
                     setProgress(25 + Math.min(1, elapsed / (TEST_DURATION / 1000)) * 35);
                 }
             }
@@ -1162,7 +1208,7 @@
                     ulPeak = Math.max(ulPeak, mbps);
                     ui.peakUl.innerText = 'peak ' + fmtSpeed(ulPeak) + ' ' + unitLabel();
                     paintSpeeds(dlSpeedResult, mbps);
-                    pushSample(ulSeries, mbps);
+                    pushPoint(dlSpeedResult, mbps);
                     setProgress(62 + Math.min(1, elapsed / (TEST_DURATION / 1000)) * 36);
                 }
             };
