@@ -204,15 +204,6 @@
             margin-bottom: 14px;
         }
         .verdict { display: flex; align-items: center; gap: 12px; }
-        .grade-badge {
-            width: 52px; height: 52px;
-            border-radius: 16px;
-            display: grid; place-items: center;
-            font-size: 1.35rem; font-weight: 900;
-            background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(139,92,246,0.25));
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-        }
         .verdict h2 { font-size: 1.05rem; font-weight: 800; }
         .verdict p { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
 
@@ -478,7 +469,7 @@
         .history-empty { text-align: center; color: var(--text-dim); font-size: 0.82rem; padding: 18px 10px; border: 1px dashed rgba(255,255,255,0.096); border-radius: 16px; font-weight: 600; }
         .h-row {
             display: grid;
-            grid-template-columns: auto 1fr auto auto auto;
+            grid-template-columns: 1fr auto auto auto;
             gap: 6px 14px;
             align-items: center;
             background: rgba(255,255,255,0.03);
@@ -489,7 +480,6 @@
             animation: fadeUp 0.4s ease both;
         }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        .h-grade { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-weight: 900; font-size: 0.95rem; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.3); }
         .h-time { font-weight: 800; }
         .h-time small { display: block; color: var(--text-dim); font-weight: 600; font-size: 0.68rem; }
         .h-m { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
@@ -577,11 +567,9 @@
         [data-theme="light"] .net-val { color: var(--text-main); }
         [data-theme="light"] .h-row { background: rgba(255,255,255,0.54); }
         [data-theme="light"] .h-m b { color: var(--text-main); }
-        [data-theme="light"] .h-grade { background: rgba(56,189,248,0.12); }
         [data-theme="light"] .history-empty { border-color: rgba(15,23,42,0.2); }
         [data-theme="light"] .icon-btn { background: rgba(255,255,255,0.51); color: var(--text-main); }
         [data-theme="light"] .icon-btn:hover { background: #fff; }
-        [data-theme="light"] .grade-badge { background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(139,92,246,0.18)); }
         [data-theme="light"] .clock { text-shadow: 0 0 18px rgba(56,189,248,0.35); }
         [data-theme="light"] footer { color: rgba(15,23,42,0.5); }
         [data-theme="light"] #toast { background: rgba(15,23,42,0.94); color: #fff; }
@@ -635,7 +623,6 @@
         <div class="glass-panel">
             <div class="panel-head">
                 <div class="verdict">
-                    <div id="grade-badge" class="grade-badge" title="Connection grade">–</div>
                     <div>
                         <h2 id="verdict-title">Ready to test</h2>
                         <p id="verdict-sub">Ping · download · upload · loss</p>
@@ -789,7 +776,7 @@
         valPing: $('val-ping'), valJitter: $('val-jitter'),
         valLat: $('val-lat'), valLoss: $('val-loss'),
         msg: $('msg-box'), progress: $('progress-fill'),
-        grade: $('grade-badge'), verdictT: $('verdict-title'), verdictS: $('verdict-sub'),
+        verdictT: $('verdict-title'), verdictS: $('verdict-sub'),
         peakDl: $('peak-dl'), peakUl: $('peak-ul'),
         liveDot: $('live-dot'), lastRun: $('last-run'), testCount: $('test-count'),
         unitDl: $('unit-dl'), unitUl: $('unit-ul'),
@@ -858,24 +845,9 @@
         else if (name === 'ul') { ulCard.classList.add('phase-active'); dlCard.classList.add('phase-idle'); }
     }
 
-    function setVerdict(title, sub, grade) {
+    function setVerdict(title, sub) {
         ui.verdictT.innerText = title;
         ui.verdictS.innerText = sub;
-        if (grade) ui.grade.innerText = grade;
-    }
-
-    function gradeFor(dl, ping, loss) {
-        let g = 'D';
-        if (dl >= 100) g = 'A+';
-        else if (dl >= 50) g = 'A';
-        else if (dl >= 25) g = 'B+';
-        else if (dl >= 10) g = 'B';
-        else if (dl >= 5) g = 'C';
-        const order = ['D', 'C', 'B', 'B+', 'A', 'A+'];
-        let i = order.indexOf(g);
-        if ((ping != null && ping > 150) || (loss != null && loss > 2)) i = Math.max(0, i - 1);
-        if ((ping != null && ping > 300) || (loss != null && loss > 5)) i = Math.max(0, i - 1);
-        return order[i];
     }
 
     function verdictText(dl, ping) {
@@ -1053,7 +1025,6 @@
         paintSpeeds(0, 0);
         ui.valPing.innerText = '...'; ui.valJitter.innerText = '...';
         ui.valLat.innerText = '...'; ui.valLoss.innerText = '...';
-        ui.grade.innerText = '…';
         setPhase('ping'); setProgress(4);
         drawGraph();
 
@@ -1077,10 +1048,9 @@
             catch (e) { console.warn("Demo mode (UL)"); await runSimulation('ul'); }
 
             setPhase('done'); setProgress(100);
-            const g = gradeFor(dlSpeedResult, lastPing, lastLoss);
             const [t, s] = verdictText(dlSpeedResult, lastPing || 0);
             const jTxt = pingJitter != null ? pingJitter.toFixed(0) + ' ms jitter' : 'demo mode';
-            setVerdict(t, s, g);
+            setVerdict(t, s);
             ui.msg.innerHTML = `Test complete · <span class="ok">${jTxt}</span>`;
             finishTest(true);
         } catch (err) {
@@ -1108,8 +1078,7 @@
             ul: +ulSpeedResult.toFixed(1),
             ping: lastPing != null ? Math.round(lastPing) : null,
             jitter: pingJitter != null ? Math.round(pingJitter) : null,
-            loss: lastLoss != null ? +lastLoss.toFixed(1) : null,
-            grade: gradeFor(dlSpeedResult, lastPing, lastLoss)
+            loss: lastLoss != null ? +lastLoss.toFixed(1) : null
         };
         saveHistory(lastResults);
         ui.btnCopy.disabled = false;
@@ -1366,7 +1335,6 @@
             const row = document.createElement('div');
             row.className = 'h-row';
             row.innerHTML = `
-                <div class="h-grade">${r.grade || '–'}</div>
                 <div class="h-time">${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}<small>${timeAgo(d)}</small></div>
                 <div class="h-m h-dl"><b>${r.dl}</b> <span>Mbps ↓</span></div>
                 <div class="h-m h-ul h-hide-m"><b>${r.ul}</b> <span>Mbps ↑</span></div>
@@ -1386,7 +1354,7 @@
     function resultsText() {
         if (!lastResults) return '';
         const r = lastResults;
-        return `NetGauge result (${new Date(r.t).toLocaleString()}): ⬇ ${r.dl} Mbps · ⬆ ${r.ul} Mbps · ping ${r.ping} ms · jitter ${r.jitter} ms · loss ${r.loss}% · grade ${r.grade}`;
+        return `NetGauge result (${new Date(r.t).toLocaleString()}): ⬇ ${r.dl} Mbps · ⬆ ${r.ul} Mbps · ping ${r.ping} ms · jitter ${r.jitter} ms · loss ${r.loss}%`;
     }
     async function copyResults() {
         const txt = resultsText();
@@ -1478,9 +1446,8 @@
             lastResults = h[0];
             ui.btnCopy.disabled = false;
             ui.btnShare.disabled = false;
-            const g = lastResults.grade || gradeFor(lastResults.dl, lastResults.ping, lastResults.loss);
             const [t, s] = verdictText(lastResults.dl, lastResults.ping || 0);
-            setVerdict(t + ' (last test)', s, g);
+            setVerdict(t + ' (last test)', s);
             dlSpeedResult = lastResults.dl; ulSpeedResult = lastResults.ul;
             lastPing = lastResults.ping; lastLoss = lastResults.loss;
             pingJitter = lastResults.jitter;
