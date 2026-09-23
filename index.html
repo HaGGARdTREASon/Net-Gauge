@@ -351,8 +351,9 @@
         .graph-head h3 { font-size: 0.75rem; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
         .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: inline-block; }
         .live-dot.on { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.2s infinite; }
-        .legend { display: flex; gap: 12px; font-size: 0.7rem; font-weight: 700; color: var(--text-dim); }
+        .legend { display: flex; gap: 12px; font-size: 0.7rem; font-weight: 700; color: var(--text-dim); align-items: center; }
         .legend i { width: 18px; height: 3px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+        .graph-unit { font-size: 0.62rem; font-weight: 900; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 50px; background: rgba(139,92,246,0.16); border: 1px solid rgba(139,92,246,0.35); color: var(--text-main); }
         #graph { width: 100%; height: 110px; display: block; }
 
         /* Stats */
@@ -700,7 +701,7 @@
             <div class="graph-card">
                 <div class="graph-head">
                     <h3><span id="live-dot" class="live-dot"></span>Live throughput</h3>
-                    <div class="legend"><span><i style="background:#38bdf8;box-shadow:0 0 8px #38bdf8"></i>Down</span><span><i style="background:#f472b6;box-shadow:0 0 8px #f472b6"></i>Up</span></div>
+                    <div class="legend"><span class="graph-unit" id="graph-unit">Mbps</span><span><i style="background:#38bdf8;box-shadow:0 0 8px #38bdf8"></i>Down</span><span><i style="background:#f472b6;box-shadow:0 0 8px #f472b6"></i>Up</span></div>
                 </div>
                 <canvas id="graph" width="600" height="110"></canvas>
             </div>
@@ -900,6 +901,8 @@
     window.addEventListener('resize', sizeGraph);
 
     function niceAxisMax(v) {
+        if (v <= 2) return 2;
+        if (v <= 5) return 5;
         if (v <= 10) return 10;
         if (v <= 25) return 25;
         if (v <= 50) return 50;
@@ -923,11 +926,13 @@
         const padT = 8 * dpr, padB = 8 * dpr;
 
         const n = dlSeries.length; // == ulSeries.length (shared timeline)
-        const peak = n ? Math.max(...dlSeries, ...ulSeries) : 0;
-        const max = niceAxisMax(Math.max(10, peak));
+        // Series are stored in raw Mbps; scale to the selected display unit (MB/s = Mbps / 8)
+        const unitDiv = displayUnit === 'MBps' ? 8 : 1;
+        const peak = n ? Math.max(...dlSeries, ...ulSeries) / unitDiv : 0;
+        const max = niceAxisMax(Math.max(displayUnit === 'MBps' ? 2 : 10, peak));
         const ticks = [max, max / 2, 0];
 
-        const yOf = (v) => H - padB - (Math.min(v, max) / max) * (H - padT - padB);
+        const yOf = (v) => H - padB - (Math.min(v / unitDiv, max) / max) * (H - padT - padB);
         const slot = plotW / (GRAPH_POINTS - 1);
         const xOf = (i) => i * slot;
 
@@ -1411,9 +1416,11 @@
         displayUnit = u;
         $('unit-mbps').classList.toggle('active', u === 'Mbps');
         $('unit-mbps2').classList.toggle('active', u === 'MBps');
+        $('graph-unit').innerText = u === 'MBps' ? 'MB/s' : 'Mbps';
         paintSpeeds(dlSpeedResult, ulSpeedResult);
         if (dlPeak) ui.peakDl.innerText = 'peak ' + fmtSpeed(dlPeak) + ' ' + unitLabel();
         if (ulPeak) ui.peakUl.innerText = 'peak ' + fmtSpeed(ulPeak) + ' ' + unitLabel();
+        drawGraph(); // rescale lines + y-axis to the new unit
         try { localStorage.setItem('netgauge-unit', u); } catch (_) {}
     }
 
