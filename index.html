@@ -901,15 +901,9 @@
     window.addEventListener('resize', sizeGraph);
 
     function niceAxisMax(v) {
-        if (v <= 2) return 2;
-        if (v <= 5) return 5;
-        if (v <= 10) return 10;
-        if (v <= 25) return 25;
-        if (v <= 50) return 50;
-        if (v <= 100) return 100;
-        if (v <= 250) return 250;
-        if (v <= 500) return 500;
-        return Math.ceil(v / 250) * 250;
+        const steps = [1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 250, 500, 1000];
+        for (const s of steps) if (v <= s) return s;
+        return Math.ceil(v / 500) * 500;
     }
 
     function drawGraph() {
@@ -929,12 +923,18 @@
         // Series are stored in raw Mbps; scale to the selected display unit (MB/s = Mbps / 8)
         const unitDiv = displayUnit === 'MBps' ? 8 : 1;
         const peak = n ? Math.max(...dlSeries, ...ulSeries) / unitDiv : 0;
-        const max = niceAxisMax(Math.max(displayUnit === 'MBps' ? 2 : 10, peak));
-        const ticks = [max, max / 2, 0];
+        // 25% headroom so the fastest line never rides the top edge
+        const max = niceAxisMax(Math.max(displayUnit === 'MBps' ? 2 : 10, peak * 1.25));
 
-        const yOf = (v) => H - padB - (Math.min(v / unitDiv, max) / max) * (H - padT - padB);
+        const yOf = (v) => H - padB - (Math.min(v / unitDiv, max) / max) * (H - padT - padB); // v in raw Mbps
+        const yTick = (t) => H - padB - (Math.min(t, max) / max) * (H - padT - padB); // t already in display units
         const slot = plotW / (GRAPH_POINTS - 1);
         const xOf = (i) => i * slot;
+
+        // Ticks: drop the middle one if labels would collide on short plots
+        let ticks = [max, max / 2, 0];
+        const minGap = 13 * dpr;
+        if (yTick(max / 2) - yTick(max) < minGap || yTick(0) - yTick(max / 2) < minGap) ticks = [max, 0];
 
         // Gridlines + right-side y-axis values (Mbps)
         gtx.lineWidth = 1;
@@ -942,14 +942,14 @@
         gtx.textAlign = 'left';
         gtx.textBaseline = 'middle';
         ticks.forEach((t) => {
-            const y = Math.round(yOf(t)) + 0.5;
+            const y = Math.round(yTick(t)) + 0.5;
             gtx.strokeStyle = gridColor;
             gtx.beginPath();
             gtx.moveTo(0, y);
             gtx.lineTo(plotW, y);
             gtx.stroke();
             gtx.fillStyle = textColor;
-            gtx.fillText(String(parseFloat(t.toFixed(1))), plotW + 6 * dpr, yOf(t));
+            gtx.fillText(String(parseFloat(t.toFixed(1))), plotW + 6 * dpr, yTick(t));
         });
 
         if (!n) {
